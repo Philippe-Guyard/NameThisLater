@@ -35,6 +35,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Levels\LevelAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Levels\LevelInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Levels\LevelsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Levels\Tutorial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MySoundEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Settings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tiled\TiledMap.cs" />

@@ -209,6 +209,8 @@ namespace FirstGameEngine
                     break;
                 case GameState.Died:
                     break;
+				case GameState.Tutorial:
+					break;
                 case GameState.Levels:
                     UpdateLevelsScreen();
                     break;

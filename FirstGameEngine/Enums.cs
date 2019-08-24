@@ -62,6 +62,7 @@ namespace FirstGameEngine
         InLevel,
         StartMenu,
         Levels,
+		Tutorial,
         Settings,
         Died,
     }
