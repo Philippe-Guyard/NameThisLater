@@ -56,6 +56,8 @@ namespace FirstGameEngine
 
         protected Texture2D StartBG;
 
+		protected TutorialBox TextBox;
+
         protected double FpsFactor = 60.000;
         protected long FrameCount = 0;
 
@@ -78,6 +80,7 @@ namespace FirstGameEngine
         {
             Settings.SoundFX = true;
             Settings.Music = false;
+			Settings.ShowTutorial = true;
 
             graphics = new GraphicsDeviceManager(this);
             
@@ -130,6 +133,9 @@ namespace FirstGameEngine
 
             FontManager.Initialize(Content);
 
+			if (Settings.ShowTutorial)
+				TextBox = new TutorialBox(Constants.SampleWindowWidth / 4, Constants.SampleWindowHeight / 4);
+
             base.Initialize();
         }
 
@@ -169,6 +175,9 @@ namespace FirstGameEngine
             CurrentSettingsUI.LoadContent(Content, "misc/OptionsButtonsAtlas");
 
             StartBG = Content.Load<Texture2D>("misc/BG");
+
+			if (Settings.ShowTutorial)
+				TextBox.LoadContent(GraphicsDevice, Content, "misc/box_background");
 
             base.LoadContent();
 
@@ -210,6 +219,7 @@ namespace FirstGameEngine
                 case GameState.Died:
                     break;
 				case GameState.Tutorial:
+					UpdateTutorial(gameTime, GetActions());
 					break;
                 case GameState.Levels:
                     UpdateLevelsScreen();
@@ -231,6 +241,11 @@ namespace FirstGameEngine
             }
         }
 
+		protected virtual void UpdateTutorial(GameTime gameTime, List<ActionTypes> actions)
+		{
+			
+		}
+
         protected virtual void UpdateStartMenu()
         {
             if (SettingsButton.IsPressed(Scale))
@@ -240,12 +255,17 @@ namespace FirstGameEngine
             }
             else if (StartButton.IsPressed(Scale))
             {
-                //gameState = GameState.Levels;
-                gameState = GameState.InLevel;
-                CurrentLevelIndex = 0;
+				if (Settings.ShowTutorial)
+					gameState = GameState.Tutorial;
+				else
+				{
+					//gameState = GameState.Levels;
+					gameState = GameState.InLevel;
+					CurrentLevelIndex = 0;
 
-                CurrentLevel.BeginLevelEnter();
-                MainInstance.Stop();
+					CurrentLevel.BeginLevelEnter();
+					MainInstance.Stop();
+				}
             }
         }
 
@@ -389,7 +409,11 @@ namespace FirstGameEngine
 
                     DrawDieScreen();
                     break;
+				case GameState.Tutorial:
+					StandardBeginDraw();
 
+					DrawTutorial();
+					break;
                 case GameState.Levels:
                     StandardBeginDraw();
 
@@ -416,6 +440,24 @@ namespace FirstGameEngine
         }
 
         #region DrawScreens
+
+		protected virtual void DrawTutorial()
+		{
+			Vector2 pos = new Vector2(Constants.SampleWindowWidth / 4, Constants.SampleWindowHeight / 4);
+
+			TextBox.Draw(spriteBatch);
+			spriteBatch.DrawString(
+				defaultFont,
+				"Welcome!",
+				Vector2.Add(pos, new Vector2(1, 1)),
+				Color.Black,
+				0f,
+				Vector2.Zero,
+				1f,
+				SpriteEffects.None,
+				1f
+			);
+		}
 
         protected virtual void DrawStartMenu()
         {

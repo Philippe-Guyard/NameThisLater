@@ -8,5 +8,7 @@ namespace FirstGameEngine
     {
         public static bool Music { get; set; }
         public static bool SoundFX { get; set; }
+
+		public static bool ShowTutorial { get; set; }
     }
 }
