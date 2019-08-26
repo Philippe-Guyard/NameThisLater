@@ -29,6 +29,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Entities\TriangularLader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Entities\WeaponEntity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FontManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameEngine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Levels\Level.cs" />

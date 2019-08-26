@@ -57,6 +57,7 @@ namespace FirstGameEngine
         protected Texture2D StartBG;
 
 		protected TutorialBox TextBox;
+		protected GameEngine TutorialEngine;
 
         protected double FpsFactor = 60.000;
         protected long FrameCount = 0;
@@ -72,9 +73,9 @@ namespace FirstGameEngine
 
         public double ScaleFactor => (WidthScale + HeightScale) / 2.0;
 
-        protected GameEngine gameEngine => Engines[CurrentLevelIndex];
+        protected GameEngine gameEngine => Settings.ShowTutorial ? TutorialEngine : Engines[CurrentLevelIndex];
 
-        protected Level CurrentLevel => LevelsManager.Get(CurrentLevelIndex);
+        protected Level CurrentLevel => Settings.ShowTutorial ? LevelsManager.Get(-1) : LevelsManager.Get(CurrentLevelIndex);
 
         public AdvancedGame()
         {
@@ -134,7 +135,10 @@ namespace FirstGameEngine
             FontManager.Initialize(Content);
 
 			if (Settings.ShowTutorial)
+			{
 				TextBox = new TutorialBox(Constants.SampleWindowWidth / 4, Constants.SampleWindowHeight / 4);
+				TutorialEngine = new GameEngine(GraphicsDevice);
+			}
 
             base.Initialize();
         }
@@ -177,7 +181,12 @@ namespace FirstGameEngine
             StartBG = Content.Load<Texture2D>("misc/BG");
 
 			if (Settings.ShowTutorial)
+			{
 				TextBox.LoadContent(GraphicsDevice, Content, "misc/box_background");
+
+				TutorialEngine.CreateCamera(GraphicsDevice, (float)ScaleFactor);
+				TutorialEngine.LoadContent(Content, LevelsManager.Get(-1));
+			}
 
             base.LoadContent();
 
@@ -243,7 +252,15 @@ namespace FirstGameEngine
 
 		protected virtual void UpdateTutorial(GameTime gameTime, List<ActionTypes> actions)
 		{
-			
+			Tutorial.Update(actions, TextBox, gameEngine.AttachedCamera.GetViewMatrix());
+
+			UpdateGame(gameTime, actions);
+
+			if (Tutorial.Finished)
+			{
+				Settings.ShowTutorial = false;
+				gameState = GameState.StartMenu;
+			}
 		}
 
         protected virtual void UpdateStartMenu()
@@ -256,7 +273,12 @@ namespace FirstGameEngine
             else if (StartButton.IsPressed(Scale))
             {
 				if (Settings.ShowTutorial)
+				{
 					gameState = GameState.Tutorial;
+					CurrentLevel.BeginLevelEnter();
+
+					MainInstance.Stop();
+				}
 				else
 				{
 					//gameState = GameState.Levels;
@@ -410,8 +432,6 @@ namespace FirstGameEngine
                     DrawDieScreen();
                     break;
 				case GameState.Tutorial:
-					StandardBeginDraw();
-
 					DrawTutorial();
 					break;
                 case GameState.Levels:
@@ -443,20 +463,29 @@ namespace FirstGameEngine
 
 		protected virtual void DrawTutorial()
 		{
-			Vector2 pos = new Vector2(Constants.SampleWindowWidth / 4, Constants.SampleWindowHeight / 4);
+			DrawGameMenu();
 
-			TextBox.Draw(spriteBatch);
-			spriteBatch.DrawString(
-				defaultFont,
-				"Welcome!",
-				Vector2.Add(pos, new Vector2(1, 1)),
-				Color.Black,
-				0f,
-				Vector2.Zero,
-				1f,
-				SpriteEffects.None,
-				1f
-			);
+			if (CurrentLevel.EnteredLevel)
+			{
+				Vector2 pos = new Vector2(TextBox.X, TextBox.Y);
+				pos = gameEngine.AttachedCamera.ScreenToWorld(pos.X, pos.Y);
+
+				TextBox.SetDrawPos((int)pos.X, (int)pos.Y);
+
+				TextBox.Draw(spriteBatch);
+				spriteBatch.DrawString(
+					defaultFont,
+					Tutorial.CurrentText,
+					Vector2.Add(pos, new Vector2(1, 1)),
+					Color.Black,
+					0f,
+					Vector2.Zero,
+					1f,
+					SpriteEffects.None,
+					Constants.HeroLayerDepth + 0.01f
+				);
+				
+			}
 		}
 
         protected virtual void DrawStartMenu()
@@ -470,6 +499,7 @@ namespace FirstGameEngine
         {
             if (CurrentLevel.EnteredLevel)
             {
+				//StandardBeginDraw();
                 gameEngine.DrawEverything(spriteBatch);
             }
             else

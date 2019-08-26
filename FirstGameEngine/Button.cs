@@ -19,6 +19,7 @@ namespace FirstGameEngine
 
         private float _blend = 1f;
         private int _frameCount;
+		private bool pressed = false;
 
         public bool OnlyTriggerOnRelease { get; set; }
 
@@ -95,18 +96,23 @@ namespace FirstGameEngine
             Texture = contentManager.Load<Texture2D>(path);
         }
         
-        public bool IsPressed(Matrix2D? scale = null)
+        public bool IsPressed(Matrix2D? scale = null, Matrix? transform3 = null)
         {
+			if (pressed) //The button wasn't unpressed from last press
+				return false;
 #if __IOS__
-            return IOS_IsPressed(scale);
+            return IOS_IsPressed(scale, transform3);
 #elif WINDOWS || LINUX
-            return Desktop_IsPressed(scale);
+            bool res = Desktop_IsPressed(scale, transform3);
+			if (res)
+				this.Press();
+			return res;
 #endif
 
             return false;
         }
 
-        private bool IOS_IsPressed(Matrix2D? scale)
+        private bool IOS_IsPressed(Matrix2D? scale, Matrix? transform3)
         {
             var touches = TouchPanel.GetState();
             for (int i = 0; i < touches.Count; i++)
@@ -122,6 +128,10 @@ namespace FirstGameEngine
                 {
                     coor = Vector2.Transform(coor, Matrix2D.Invert(scale.Value));
                 }
+				if (transform3.HasValue)
+				{
+					coor = Vector2.Transform(coor, Matrix.Invert(transform3.Value));
+				}
                 if (TouchTriggerRect.Contains(coor))
                 {
                     this.Press();
@@ -132,7 +142,7 @@ namespace FirstGameEngine
             return false;
         }
 
-        private bool Desktop_IsPressed(Matrix2D? scale)
+        private bool Desktop_IsPressed(Matrix2D? scale, Matrix? transform3)
         {
             var click = Mouse.GetState();
 
@@ -142,7 +152,14 @@ namespace FirstGameEngine
                 Matrix2D inputScale = Matrix2D.Invert(scale.Value);
                 coor = Vector2.Transform(coor, inputScale);
             }
-            
+
+			if (transform3.HasValue)
+			{
+				coor = Vector2.Transform(coor, Matrix.Invert(transform3.Value));
+				return BoundingRectangle.Contains(coor) && click.LeftButton == ButtonState.Pressed;
+			}
+			
+
             return TouchTriggerRect.Contains(coor)
                 && click.LeftButton == ButtonState.Pressed;
         }
@@ -153,7 +170,8 @@ namespace FirstGameEngine
             {
                 this.UnPress();
             }
-            _frameCount++;
+			if (pressed)
+				_frameCount++;
 
             if (this.Texture == null)
             {
@@ -194,12 +212,14 @@ namespace FirstGameEngine
         {
             _blend = 0.5f;
             _frameCount = 0;
+			pressed = true;
         }
 
         private void UnPress()
         {
             _blend = 1f;
             _frameCount = 0;
+			pressed = false;
         }
     }
 }

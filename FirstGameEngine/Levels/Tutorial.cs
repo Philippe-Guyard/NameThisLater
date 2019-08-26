@@ -4,6 +4,7 @@ using System.Text;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
 
 namespace FirstGameEngine.Levels
 {
@@ -14,13 +15,45 @@ namespace FirstGameEngine.Levels
 
 		private static List<TutorialStep> TutorialSteps = new List<TutorialStep>()
 		{
-
+			new TutorialStep
+			(
+				"Welcome to NameThisLater.",
+				new List<ActionTypes>(),
+				new List<ActionTypes>()
+			),
+			new TutorialStep
+			(
+				"NameThisLater is a 2D pixel platformer. Let me teach you the basic controls for this game.",
+				new List<ActionTypes>(),
+				new List<ActionTypes>()
+			),
+			new TutorialStep
+			(
+				"Press the left and right arrow buttons to move to the left or right",
+				new List<ActionTypes>() { ActionTypes.GoLeft, ActionTypes.GoRight },
+				new List<ActionTypes>() { ActionTypes.GoLeft, ActionTypes.GoRight }
+			),
+			new TutorialStep
+			(
+				"Great! Now try to jump by pressing the up arrow",
+				new List<ActionTypes>() { ActionTypes.Jump },
+				new List<ActionTypes>() { ActionTypes.GoLeft, ActionTypes.GoRight, ActionTypes.Jump }
+			),
+			new TutorialStep
+			(
+				"Congrats, you have finished the tutorial. Press the next button to go back to main menu.",
+				new List<ActionTypes>() { },
+				new List<ActionTypes>() { ActionTypes.Fire, ActionTypes.AxeHit, ActionTypes.GoLeft, ActionTypes.GoRight, ActionTypes.Jump}
+			)
 		};
 
-		private static TutorialStep CurrentStep => TutorialSteps[_stepIndex];
+		private static TutorialStep CurrentStep => _stepIndex < TutorialSteps.Count ? TutorialSteps[_stepIndex] : TutorialSteps[0];
+
+		public static string CurrentText => CurrentStep.Message;
+		public static bool Finished => _stepIndex >= TutorialSteps.Count;
 
 
-		public static void Update(List<ActionTypes> actions, TutorialBox tutorialBox)
+		public static void Update(List<ActionTypes> actions, TutorialBox tutorialBox, Matrix transform)
 		{
 			//Clean the actions so the game update doesn't allow unknown actions  
 			actions.RemoveAll(x => !CurrentStep.AllowedActions.Contains(x));
@@ -28,8 +61,10 @@ namespace FirstGameEngine.Levels
 			//Remove the required actions as they were used at this step index
 			CurrentStep.RequiredActions.RemoveAll(x => actions.Contains(x));
 
-			if (CurrentStep.RequiredActions.Count == 0 && tutorialBox.PassPressed())
+			if (CurrentStep.RequiredActions.Count == 0 && tutorialBox.PassPressed(transform))
+			{
 				_stepIndex++;
+			}
 		}
 
 		private struct TutorialStep
@@ -51,8 +86,8 @@ namespace FirstGameEngine.Levels
 	public class TutorialBox
 	{
 		private static readonly Vector2 BtnOffset = new Vector2(1, 1);
-		private const int BtnWidth = 16;
-		private const int BtnHeight = 8;
+		private const int BtnWidth = 48;
+		private const int BtnHeight = 24;
 
 		private Button PassButton;
 		private Texture2D BoxBG;
@@ -60,20 +95,33 @@ namespace FirstGameEngine.Levels
 		public int X { get; private set; }
 		public int Y { get; private set; }
 
-		public bool PassPressed() => PassButton.IsPressed();
+		private int DrawX { get; set; }
+		private int DrawY { get; set; }
+
+		public bool PassPressed(Matrix transform) => PassButton.IsPressed(transform3: transform);
 
 		public TutorialBox(int x, int y)
 		{
-			X = x;
-			Y = y;
+			DrawX = X = x;
+			DrawY = Y = y;
 		}
 
+		public void SetDrawPos(int newX, int newY)
+		{
+			DrawX = newX;
+			DrawY = newY;
+
+			PassButton.X = DrawX + BoxBG.Width - BtnWidth - (int)BtnOffset.X;
+			PassButton.Y = DrawY + BoxBG.Height - BtnHeight - (int)BtnOffset.Y;
+		}
+
+		[Obsolete]
 		public void Draw(SpriteBatch spriteBatch)
 		{
 			spriteBatch.Draw
 			(
 				texture: BoxBG,
-				destinationRectangle: new Rectangle(X, Y, BoxBG.Width, BoxBG.Height),
+				destinationRectangle: new Rectangle(DrawX, DrawY, BoxBG.Width, BoxBG.Height),
 				layerDepth: Constants.HeroLayerDepth - 0.0001f
 			);
 

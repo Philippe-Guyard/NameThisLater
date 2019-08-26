@@ -12,6 +12,7 @@ namespace FirstGameEngine.Levels
     public static class LevelsManager
     {
         private static List<Level> Levels;
+		private static Level Tutorial;
 
         //Loads some content
         public static void Initialize(GraphicsDevice graphicsDevice, ContentManager contentManager)
@@ -20,9 +21,33 @@ namespace FirstGameEngine.Levels
 
             Level lvl;
 
-            #region Level 1
+			#region Tutorial
 
-            lvl = new Level();            
+			Tutorial = new Level();
+			LevelInfo info = new LevelInfo();
+			info.Graphics = new LevelGraphics();
+			info.Graphics.BackgroundElementsFolder = "background/";
+			info.Graphics.ObstaclesFolder = "obstacles/";
+			info.Graphics.HeroFolder = "hero/";
+			info.Graphics.DecorationsFolder = "decorations/";
+			info.Graphics.GuardFolder = "guard/";
+			info.RealWorldLocation = "Somewhere in XIX century England";
+
+			Tutorial.Info = info;
+
+#if __IOS__
+            Tutorial.Map = new Tiled.IosTiledMap(0, 0);
+#else
+			Tutorial.Map = new Tiled.TiledMap(0, 0);
+#endif
+			Tutorial.Map.Load(graphicsDevice, "Content/Test/LevelTest.tmx");
+			Tutorial.Map.LoadFront(contentManager, graphicsDevice, "Levels/Level1/Front", "Levels/Level1/Back");
+
+			#endregion
+
+			#region Level 1
+
+			lvl = new Level();            
             LevelInfo Info = new LevelInfo();
             Info.Graphics = new LevelGraphics();
             Info.Graphics.BackgroundElementsFolder = "background/";
@@ -150,6 +175,9 @@ namespace FirstGameEngine.Levels
 
         public static Level Get(int index)
         {
+			if (index == -1)
+				return Tutorial;
+
             if (index >= Levels.Count)
                 throw new InvalidOperationException("No such level");
 
